@@ -185,6 +185,70 @@ module.exports = function (
       console.log(error);
     }
   });
+  app.post("/api/calc/user/followinginfo", urlPrsr, authCheck, (req, res) => {
+    try {
+      // let userId = req.userId;
+
+      // let body = req.body;
+      // let following_id = body.following_id;
+     
+      // if (!following_id) {
+      //   errorHandler.errorHandler(400, "Enter followingid", res);
+      //   return;
+      // }
+      // let addTweet =
+      //   "Insert into connection_data (follower_id, following_id) values (?, ?)";
+      // let params = [userId, following_id];
+      // let mysqlPromise = util.promisify(utility.mysqlHandler);
+      // mysqlPromise(addTweet, params, mysqlConnection)
+      //   .then((result) => {
+      //     responder.respond(
+      //       {
+      //         message:"Following added"
+      //       },
+      //       res
+      //     );
+      //   })
+      //   .catch((error) => {
+      //     errorHandler.errorHandler(500, error, res);
+      //     console.log(error);
+      //   });
+      let userId = req.userId;
+
+      let body = req.body;
+      let following_id = body.following_id;
+      let userQuery = "select following_id from connection_data where follower_id = ? and following_id = ?";
+      let params = [userId,following_id];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+
+      mysqlPromise(userQuery, params, mysqlConnection)
+        .then((result) => {
+          if (result.length > 0) {
+            let error = "Following already added";
+            errorHandler.errorHandler(400, error, res, "ER400");
+          } else {
+            let addFollowing =
+              "Insert into connection_data (follower_id, following_id) values (?, ?)";
+              let params = [userId, following_id];
+            return mysqlPromise(addFollowing, params, mysqlConnection);
+          }
+        })
+        .then((result) => {
+            responder.respond(
+              {
+                message: "Following added"
+              },
+              res
+            );
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
   app.post("/api/calc/user/signout", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
