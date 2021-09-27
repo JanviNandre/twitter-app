@@ -117,7 +117,7 @@ module.exports = function (
         return;
       }
       let addTweet =
-        "Insert into tweets (user_id, text, attachment) values (?, ?, ?)";
+        "Insert into tweets (userId, text, attachment) values (?, ?, ?)";
       let params = [userId, text, attachment];
       let mysqlPromise = util.promisify(utility.mysqlHandler);
       mysqlPromise(addTweet, params, mysqlConnection)
@@ -125,6 +125,53 @@ module.exports = function (
           responder.respond(
             {
               message:"Tweet sent"
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.get("/api/calc/user/getmytweets", urlPrsr, authCheck, (req, res) => {
+    try {
+      let userId = req.userId;
+      let getHistory = "select id, text,attachment from tweets where userId = ?";
+      let params = [userId];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(getHistory, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              result: result,
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.get("/api/calc/user/getusers", urlPrsr, (req, res) => {
+    try {
+      let getUsers = "select id, username from user_details";
+      let params = [];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(getUsers, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              result: result,
             },
             res
           );
