@@ -52,7 +52,7 @@ module.exports = function (
       errorHandler.errorHandler(500, error, res);
     }
   });
-  app.post("api/twt/user/signin", urlPrsr, (req, res) => {
+  app.post("/api/twt/user/signin", urlPrsr, (req, res) => {
     try {
       let body = req.body;
       let username = req.body.username;
@@ -102,7 +102,7 @@ module.exports = function (
       errorHandler.errorHandler(500, error, res);
     }
   });
-  app.post("/api/calc/user/tweets", urlPrsr, authCheck, (req, res) => {
+  app.post("/api/twt/user/tweets", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
 
