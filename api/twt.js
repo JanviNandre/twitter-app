@@ -10,7 +10,7 @@ module.exports = function (
   responder,
   mysqlConnection
 ) {
-  app.post("/api/calc/user/signup", urlPrsr, (req, res) => {
+  app.post("/api/twt/user/signup", urlPrsr, (req, res) => {
     try {
       let body = req.body;
       let username = req.body.username;
@@ -52,8 +52,7 @@ module.exports = function (
       errorHandler.errorHandler(500, error, res);
     }
   });
-
-  app.post("/api/calc/user/signin", urlPrsr, (req, res) => {
+  app.post("api/twt/user/signin", urlPrsr, (req, res) => {
     try {
       let body = req.body;
       let username = req.body.username;
@@ -103,7 +102,6 @@ module.exports = function (
       errorHandler.errorHandler(500, error, res);
     }
   });
-
   app.post("/api/calc/user/tweets", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
@@ -138,7 +136,7 @@ module.exports = function (
       console.log(error);
     }
   });
-  app.get("/api/calc/user/getmytweets", urlPrsr, authCheck, (req, res) => {
+  app.get("/api/twt/user/getmytweets", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
       let getHistory = "select id, text,attachment from tweets where userId = ?";
@@ -162,7 +160,7 @@ module.exports = function (
       console.log(error);
     }
   });
-  app.get("/api/calc/user/getusers", urlPrsr, (req, res) => {
+  app.get("/api/twt/user/getusers", urlPrsr, (req, res) => {
     try {
       let getUsers = "select id, username from user_details";
       let params = [];
@@ -185,34 +183,8 @@ module.exports = function (
       console.log(error);
     }
   });
-  app.post("/api/calc/user/followinginfo", urlPrsr, authCheck, (req, res) => {
+  app.post("/api/twt/user/followinginfo", urlPrsr, authCheck, (req, res) => {
     try {
-      // let userId = req.userId;
-
-      // let body = req.body;
-      // let following_id = body.following_id;
-     
-      // if (!following_id) {
-      //   errorHandler.errorHandler(400, "Enter followingid", res);
-      //   return;
-      // }
-      // let addTweet =
-      //   "Insert into connection_data (follower_id, following_id) values (?, ?)";
-      // let params = [userId, following_id];
-      // let mysqlPromise = util.promisify(utility.mysqlHandler);
-      // mysqlPromise(addTweet, params, mysqlConnection)
-      //   .then((result) => {
-      //     responder.respond(
-      //       {
-      //         message:"Following added"
-      //       },
-      //       res
-      //     );
-      //   })
-      //   .catch((error) => {
-      //     errorHandler.errorHandler(500, error, res);
-      //     console.log(error);
-      //   });
       let userId = req.userId;
 
       let body = req.body;
@@ -249,7 +221,117 @@ module.exports = function (
       console.log(error);
     }
   });
-  app.post("/api/calc/user/signout", urlPrsr, authCheck, (req, res) => {
+  app.get("/api/twt/user/following", urlPrsr, authCheck,(req, res) => {
+    try {
+      let userId = req.userId;
+      let getFollowers = "select username from user_details natural join connection_data where (id=following_id and follower_id = ?)";
+      let params = [userId];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(getFollowers, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              result: result,
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.get("/api/twt/user/followers", urlPrsr, authCheck,(req, res) => {
+    try {
+      let userId = req.userId;
+      let getFollowers = "select username from user_details natural join connection_data where (id=follower_id and following_id = ?)";
+      let params = [userId];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(getFollowers, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              result: result,
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.post("/api/twt/user/bookmark", urlPrsr, authCheck, (req, res) => {
+    try {
+      let userId = req.userId;
+
+      let body = req.body;
+      let tweet_id = body.tweet_id;
+      let userQuery = "select tweet_id from bookmark where user_id = ? and tweet_id = ?";
+      let params = [userId,tweet_id];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+
+      mysqlPromise(userQuery, params, mysqlConnection)
+        .then((result) => {
+          if (result.length > 0) {
+            let error = "Already bookmarked";
+            errorHandler.errorHandler(400, error, res, "ER400");
+          } else {
+            let addBookmark =
+              "Insert into bookmark (user_id, tweet_id) values (?, ?)";
+              let params = [userId, tweet_id];
+            return mysqlPromise(addBookmark, params, mysqlConnection);
+          }
+        })
+        .then((result) => {
+            responder.respond(
+              {
+                message: "Tweet bookmarked"
+              },
+              res
+            );
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.get("/api/twt/user/bmktweets", urlPrsr, authCheck, (req, res) => {
+    try {
+      let userId = req.userId;
+      let getHistory = "select text,attachment from tweets natural join bookmark where (tweets.id=tweet_id and bookmark.user_id = ?)";
+      let params = [userId];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(getHistory, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              result: result,
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
+  app.post("/api/twt/user/signout", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
       var accessToken = req.headers["authorization"];

@@ -61,7 +61,7 @@ const mysqlConnection = mysql.createConnection({
   port: 3308,
   user: 'root',
   password: '',
-  database: 'calc'
+  database: 'twitter'
 });
 
 // server listening
@@ -71,4 +71,4 @@ var authCheck = require('./controllers/authcheck')(urlPrsr, app, errorHandler, r
 
 var user = require('./api/user')(urlPrsr, app, authCheck, errorHandler, responder, mysqlConnection);
 
-var calc = require('./api/calc')(urlPrsr, app, authCheck, errorHandler, responder, mysqlConnection);
+var calc = require('./api/twt')(urlPrsr, app, authCheck, errorHandler, responder, mysqlConnection);
