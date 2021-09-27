@@ -103,6 +103,41 @@ module.exports = function (
       errorHandler.errorHandler(500, error, res);
     }
   });
+
+  app.post("/api/calc/user/tweets", urlPrsr, authCheck, (req, res) => {
+    try {
+      let userId = req.userId;
+
+      let body = req.body;
+      let text = body.text;
+      let attachment  = body.attachment;
+  
+      if (text.length > 160) {
+        errorHandler.errorHandler(400, "Tweet Excedded length", res);
+        return;
+      }
+      let addTweet =
+        "Insert into tweets (user_id, text, attachment) values (?, ?, ?)";
+      let params = [userId, text, attachment];
+      let mysqlPromise = util.promisify(utility.mysqlHandler);
+      mysqlPromise(addTweet, params, mysqlConnection)
+        .then((result) => {
+          responder.respond(
+            {
+              message:"Tweet sent"
+            },
+            res
+          );
+        })
+        .catch((error) => {
+          errorHandler.errorHandler(500, error, res);
+          console.log(error);
+        });
+    } catch (error) {
+      errorHandler.errorHandler(500, error, res);
+      console.log(error);
+    }
+  });
   app.post("/api/calc/user/signout", urlPrsr, authCheck, (req, res) => {
     try {
       let userId = req.userId;
